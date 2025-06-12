@@ -27,15 +27,17 @@ app.post('/criar-cobranca-pix', async (req, res) => {
         payment_method_id: 'pix',
         payer: {
             email: 'TESTUSER1493145163@testuser.com',// Seu comprador de teste
-            first_name:'Test',
-            last_name: 'User',
+            first_name:'TEST',
+            last_name: 'USER',
             identification: {
                 type: 'CPF',
                 number: '29167896006' // Apenas os números, sem pontos ou traços
             }
         },
-        notification_url: 'https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/webhook-mercadopago' // Exemplo com sua URL
-    };
+
+        external_reference: orderId,
+        notification_url: 'https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/webhook-mercadopago'
+};
 
     try {
         const payment = new Payment(client);
