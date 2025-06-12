@@ -1,0 +1,9 @@
+ ### Criar uma cobrança PIX de teste
+POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-cobranca-pix
+Content-Type: application/json
+
+{
+  "amount": 15.75,
+  "orderId": "teste-azure-final-001",
+  "payerEmail": "TESTUSER1493145163@testuser.com"
+}

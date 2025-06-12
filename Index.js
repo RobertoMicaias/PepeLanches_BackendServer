@@ -31,7 +31,7 @@ app.post('/criar-cobranca-pix', async (req, res) => {
             last_name: 'User',
             identification: {
                 type: 'CPF',
-                number: '291.678.960-06' // Apenas os números, sem pontos ou traços
+                number: '29167896006' // Apenas os números, sem pontos ou traços
             }
         },
         notification_url: 'https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/webhook-mercadopago' // Exemplo com sua URL
