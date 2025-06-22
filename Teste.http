@@ -1,9 +1,8 @@
-### Criar Cobrança com Cartão de Teste
-POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-cobranca-cartao
+### Criar Pagamento com Stripe (Cartão de Teste)
+POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-pagamento-stripe
 Content-Type: application/json
 
 {
-  "amount": 35.20,
-  "orderId": "teste-cartao-001",
-  "payerEmail": "test_user_1694739413@testuser.com"
+  "amount": 42.50,
+  "orderId": "stripe-test-001"
 }
