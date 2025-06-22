@@ -45,6 +45,38 @@ app.post('/criar-intent-de-pagamento', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+app.post('/criar-checkout-session', async (req, res) => {
+    try {
+        const { amount, orderId } = req.body;
+        const amountInCents = Math.round(Number(amount) * 100);
+
+        const session = await stripe.checkout.sessions.create({
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'brl',
+                        product_data: {
+                            name: `Pedido #${orderId} - Pepê Lanches`,
+                        },
+                        unit_amount: amountInCents,
+                    },
+                    quantity: 1,
+                },
+            ],
+            mode: 'payment',
+            // Defina URLs de redirecionamento (podem ser qualquer site para este teste)
+            success_url: 'https://example.com/success',
+            cancel_url: 'https://example.com/cancel',
+        });
+
+        // Retorna a URL da página de pagamento do Stripe
+        res.json({ url: session.url });
+
+    } catch (error) {
+        console.error('Erro ao criar sessão de checkout:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 
 // 3. Inicia o servidor
