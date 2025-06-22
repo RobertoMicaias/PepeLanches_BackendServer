@@ -1,9 +1,9 @@
-### Criar uma cobrança PIX de teste
-POST http://localhost:3000/criar-cobranca-pix
+### Criar Cobrança com Cartão de Teste
+POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-cobranca-cartao
 Content-Type: application/json
 
 {
-  "amount": 1.00,
-  "orderId": "teste-local-final",
+  "amount": 35.20,
+  "orderId": "teste-cartao-001",
   "payerEmail": "test_user_1694739413@testuser.com"
 }
