@@ -1,21 +1,8 @@
-# teste.http
-
-### TESTE 1: Criar uma "Intenção de Pagamento" (Para o fluxo do seu App)
-# Este é o endpoint que a sua CreditCardScreen e PixScreen devem usar.
-POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-intent-de-pagamento
+### Criar Pagamento com Stripe (Cartão de Teste)
+POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-pagamento-stripe
 Content-Type: application/json
 
 {
-  "amount": 42.50
-}
-
-###
-### TESTE 2: Criar uma "Sessão de Checkout" (Para o teste do link e do PIX)
-# Este é o teste para vermos se o PIX aparece na página do Stripe.
-POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-checkout-session
-Content-Type: application/json
-
-{
-  "amount": 50.00,
-  "orderId": "checkout-test-002"
+  "amount": 42.50,
+  "orderId": "stripe-test-001"
 }
