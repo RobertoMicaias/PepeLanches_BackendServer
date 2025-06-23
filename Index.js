@@ -3,8 +3,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-// Vamos importar as ferramentas do Stripe, mas inicializar depois do nosso teste.
-const { MercadoPagoConfig, Payment } = require('mercadopago'); // Pode remover se não for usar mais
 const stripePackage = require('stripe');
 
 // --- INÍCIO DO BLOCO DE DIAGNÓSTICO ---
