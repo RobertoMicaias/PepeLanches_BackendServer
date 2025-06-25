@@ -1,97 +1,74 @@
-// index.js (Versão com Stripe e Diagnóstico)
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const stripePackage = require('stripe');
 
-// --- INÍCIO DO BLOCO DE DIAGNÓSTICO ---
+// --- Bloco de Diagnóstico (pode manter ou remover) ---
 console.log("--- INICIANDO SERVIDOR: DIAGNÓSTICO DE CHAVE STRIPE ---");
 const stripeKey = process.env.STRIPE_SECRET_KEY;
-
 if (stripeKey) {
-    // Mostra apenas os primeiros 8 e os últimos 4 caracteres para segurança
     const maskedKey = `${stripeKey.substring(0, 8)}...${stripeKey.substring(stripeKey.length - 4)}`;
-    console.log("Variável STRIPE_SECRET_KEY encontrada. Usando chave que se parece com:", maskedKey);
+    console.log("STRIPE_SECRET_KEY encontrada. Usando chave que se parece com:", maskedKey);
 } else {
-    // Este erro é CRÍTICO. Se ele aparecer no log da Azure, o problema é 100% a variável de ambiente.
-    console.error("!!!!!!!! ERRO CRÍTICO: A variável de ambiente STRIPE_SECRET_KEY não foi encontrada (está undefined)! !!!!!!!!");
+    console.error("ERRO CRÍTICO: A variável de ambiente STRIPE_SECRET_KEY não foi encontrada!");
 }
 console.log("--- FIM DO BLOCO DE DIAGNÓSTICO ---");
-// --- FIM DO BLOCO DE DIAGNÓSTICO ---
 
-
-// Inicializa o Stripe com a chave que acabamos de verificar
 const stripe = stripePackage(stripeKey);
-
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
+
+// Deixamos o webhook receber o corpo "bruto" da requisição para verificar a assinatura
+app.post('/stripe-webhook', express.raw({ type: 'application/json' }), (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET; // Chave secreta do Webhook
+
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+        console.log('--- Webhook do Stripe Verificado com Sucesso! ---');
+    } catch (err) {
+        console.error(`❌ Erro na verificação da assinatura do Webhook: ${err.message}`);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Lida com o evento
+    switch (event.type) {
+        case 'payment_intent.succeeded':
+            const paymentIntentSucceeded = event.data.object;
+            console.log(`✅ Pagamento ${paymentIntentSucceeded.id} foi bem-sucedido!`);
+            // LÓGICA DE NEGÓCIO:
+            // 1. Busque o pedido no seu banco de dados usando um ID salvo no paymentIntent (ex: metadata.orderId)
+            // 2. Atualize o status do pedido para "PAGO".
+            // 3. Envie uma notificação para o cliente ou para a cozinha.
+            break;
+        case 'payment_intent.payment_failed':
+            const paymentIntentFailed = event.data.object;
+            console.log(`❌ Pagamento ${paymentIntentFailed.id} falhou.`);
+            // LÓGICA DE NEGÓCIO:
+            // 1. Registre a falha no seu banco de dados.
+            // 2. Envie um e-mail/notificação para o cliente informando da falha.
+            break;
+        default:
+            console.log(`Evento não tratado do tipo ${event.type}`);
+    }
+
+    // Retorna uma resposta 200 para o Stripe para confirmar o recebimento
+    res.json({ received: true });
+});
+
+// Agora o express.json() vem DEPOIS do webhook, para não afetar o corpo bruto dele
 app.use(express.json());
 
-// Rota de teste para saber se o servidor está no ar
-app.get('/', (req, res) => {
-    res.send('Servidor do Pepê Lanches com Stripe está no ar!');
-});
-
-// Rota para criar uma "Intenção de Pagamento" (usada pelo app)
-app.post('/criar-intent-de-pagamento', async (req, res) => {
-    try {
-        const { amount } = req.body;
-        if (!amount) {
-            return res.status(400).json({ error: 'O valor (amount) é obrigatório.' });
-        }
-        const amountInCents = Math.round(Number(amount) * 100);
-
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amountInCents,
-            currency: 'brl',
-            automatic_payment_methods: { enabled: true },
-        });
-
-        res.json({
-            clientSecret: paymentIntent.client_secret,
-        });
-    } catch (error) {
-        console.error('Erro ao criar PaymentIntent:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Rota para criar uma "Sessão de Checkout" (usada para o teste do link)
-app.post('/criar-checkout-session', async (req, res) => {
-    try {
-        const { amount, orderId } = req.body;
-        const amountInCents = Math.round(Number(amount) * 100);
-
-        const session = await stripe.checkout.sessions.create({
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'brl',
-                        product_data: {
-                            name: `Pedido #${orderId} - Pepê Lanches`,
-                        },
-                        unit_amount: amountInCents,
-                    },
-                    quantity: 1,
-                },
-            ],
-            mode: 'payment',
-            success_url: 'https://example.com/success',
-            cancel_url: 'https://example.com/cancel',
-        });
-
-        res.json({ url: session.url });
-    } catch (error) {
-        console.error('Erro ao criar sessão de checkout:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+// --- Suas rotas existentes ---
+app.get('/', (req, res) => { /* ... */ });
+app.post('/criar-intent-de-pagamento', async (req, res) => { /* ... */ });
+app.post('/criar-checkout-session', async (req, res) => { /* ... */ });
 
 
-// Inicia o servidor
 app.listen(port, () => {
     console.log(`Backend Pepê Lanches (Stripe) rodando na porta ${port}`);
 });

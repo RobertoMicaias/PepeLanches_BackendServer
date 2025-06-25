@@ -1,8 +1,7 @@
-### Criar Pagamento com Stripe (Cartão de Teste)
-POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-pagamento-stripe
+### TESTE FINAL: Criar uma "Intenção de Pagamento"
+POST https://pepe-lanches-backend-eehrcbd6f2dta2cw.brazilsouth-01.azurewebsites.net/criar-intent-de-pagamento
 Content-Type: application/json
 
 {
-  "amount": 42.50,
-  "orderId": "stripe-test-001"
+  "amount": 42.50
 }
