@@ -1,18 +1,11 @@
 require('dotenv').config();
-
 const express = require('express');
-
 const cors = require('cors');
-
 const stripePackage = require('stripe');
-
-
 
 console.log("--- INICIANDO SERVIDOR: DIAGNÓSTICO DE CHAVE STRIPE ---");
 
 const stripeKey = process.env.STRIPE_SECRET_KEY;
-
-
 
 if (stripeKey) {
 
@@ -52,52 +45,30 @@ app.get('/', (req, res) => {
 
 
 
-app.post('/criar-intent-de-pagamento', async (req, res) => {
 
+app.post('/criar-intent-cartao', async (req, res) => {
     try {
-
         const { amount } = req.body;
 
         if (!amount) {
-
             return res.status(400).json({ error: 'O valor (amount) é obrigatório.' });
-
         }
 
         const amountInCents = Math.round(Number(amount) * 100);
 
-
-
         const paymentIntent = await stripe.paymentIntents.create({
-
             amount: amountInCents,
-
             currency: 'brl',
-
-            automatic_payment_methods: { enabled: true },
-
+            payment_method_types: ['card'], // <- AQUI está o segredo
         });
 
-
-
-        res.json({
-
-            clientSecret: paymentIntent.client_secret,
-
-        });
+        res.json({ clientSecret: paymentIntent.client_secret });
 
     } catch (error) {
-
-        console.error('Erro ao criar PaymentIntent:', error);
-
+        console.error('Erro ao criar PaymentIntent para cartão:', error);
         res.status(500).json({ success: false, error: error.message });
-
     }
-
 });
-
-
-
 app.post('/criar-checkout-session', async (req, res) => {
 
     try {
@@ -155,6 +126,45 @@ app.post('/criar-checkout-session', async (req, res) => {
     }
 
 });
+app.post('/criar-intent-pix', async (req, res) => {
+    try {
+        const { amount } = req.body;
+
+        if (!amount) {
+            return res.status(400).json({ error: 'O valor (amount) é obrigatório.' });
+        }
+
+        const amountInCents = Math.round(Number(amount) * 100);
+
+        // Cria a PaymentIntent com suporte explícito ao PIX
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amountInCents,
+            currency: 'brl',
+            payment_method_types: ['pix'],
+        });
+
+        // Recupera a intent expandindo o QR Code
+        const retrievedIntent = await stripe.paymentIntents.retrieve(paymentIntent.id, {
+            expand: ['next_action.pix_display_qr_code'],
+        });
+
+        const qrCodeData = retrievedIntent?.next_action?.pix_display_qr_code?.data;
+
+        if (!qrCodeData) {
+            return res.status(500).json({ error: 'Não foi possível gerar o QR Code do PIX.' });
+        }
+
+        res.json({
+            clientSecret: retrievedIntent.client_secret,
+            qrCodeData,
+        });
+
+    } catch (error) {
+        console.error('Erro ao criar PaymentIntent PIX:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 
 
 
