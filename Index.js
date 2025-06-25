@@ -44,8 +44,6 @@ app.get('/', (req, res) => {
 });
 
 
-
-
 app.post('/criar-intent-cartao', async (req, res) => {
     try {
         const { amount } = req.body;
@@ -164,6 +162,39 @@ app.post('/criar-intent-pix', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+app.post('/criar-intent-googlepay', async (req, res) => {
+    try {
+        const { amount } = req.body;
+
+        if (!amount) {
+            return res.status(400).json({ error: 'O valor (amount) é obrigatório.' });
+        }
+
+        const amountInCents = Math.round(Number(amount) * 100);
+
+        // Modificação importante para Google Pay via WebView:
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amountInCents,
+            currency: 'brl',
+            payment_method_types: ['card', 'google_pay'], // Habilita explicitamente
+            capture_method: 'automatic' // Importante para fluxo WebView
+        });
+
+        // Retorna tanto o client_secret quanto a URL formatada pronta para WebView
+        res.json({
+            clientSecret: paymentIntent.client_secret,
+            checkoutUrl: `https://checkout.stripe.com/pay/${paymentIntent.client_secret}?payment_method_types=google_pay`
+        });
+
+    } catch (error) {
+        console.error('Erro ao criar PaymentIntent para Google Pay:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
+    }
+});
+
 
 
 
